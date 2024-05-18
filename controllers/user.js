@@ -1,37 +1,86 @@
+const bcryptjs = require("bcryptjs");
 const { response, request } = require("express");
 
-const usersGet = (req = request, res = response) => {
-    const {q,nombre = 'No name',apikey,page="1",limit="20"} = req.query
+
+const User = require("../models/user");
+
+const regex = /^[0-9]*$/;
+
+const usersGet = async (req = request, res = response) => {
+
+
+  const { limit = 5, from = 0 } = req.query;
+  const query = {status:true}
+  const isLimitANumber = regex.test(limit);
+  const isFromANumber = regex.test(from);
+  if (!isLimitANumber) {
+    res.status(400).json({
+      msg: `limit value "${limit}" is not a number`,
+    });
+  }
+
+  if (!isFromANumber) {
+    res.status(400).json({
+      msg: `from value "${from}" is not a number`,
+    });
+  }
+
+
+ 
+
+  const [total,users] = await Promise.all([
+    User.countDocuments(query),
+    User.find(query).skip(Number(from)).limit(Number(limit))
+  ])
+
   res.json({
-    msg: "get API ~ controller",
-    q,
-    nombre,
-    apikey,
-    page,
-    limit
+    total,
+    users
   });
 };
 
-const usersPost = (req, res = response) => {
-    const body = req.body
+const usersPost = async (req, res = response) => {
+  const { name, email, google, password, role } = req.body;
+
+  const salt = bcryptjs.genSaltSync();
+
+  const crypt = bcryptjs.hashSync(password, salt);
+  const user = new User({
+    email,
+    google,
+    name,
+    password: crypt,
+    role,
+  });
+
+  await user.save();
+
   res.json({
     msg: "post API ~ controller",
-    body 
+    user,
   });
 };
 
-const usersDelete = (req, res = response) => {
-  res.json({
-    msg: "delete API ~ controller",
-  });
+const usersDelete = async(req = request, res = response) => {
+  const {id} = req.params
+  // const user = await User.findByIdAndDelete(id)
+
+  const user = await User.findByIdAndUpdate(id,{status:false})
+  res.json(user);
 };
 
-const usersPut = (req, res = response) => {
-    const id = req.params.id
-  res.json({
-    msg: "put API ~ controller",
-    id
-  });
+const usersPut = async (req, res = response) => {
+  const id = req.params.id;
+  const { _id, password, google, email, ...rest } = req.body;
+  if (password) {
+    const salt = bcryptjs.genSaltSync();
+    rest.password = bcryptjs.hashSync(password, salt);
+    const user = await User.findByIdAndUpdate(id, rest);
+    res.json({
+      msg: "put API ~ controller",
+      user,
+    });
+  }
 };
 
 module.exports = {
