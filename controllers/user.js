@@ -1,41 +1,35 @@
 const bcryptjs = require("bcryptjs");
 const { response, request } = require("express");
 
-
 const User = require("../models/user");
 
 const regex = /^[0-9]*$/;
 
 const usersGet = async (req = request, res = response) => {
-
-
   const { limit = 5, from = 0 } = req.query;
-  const query = {status:true}
+  const query = { status: true };
   const isLimitANumber = regex.test(limit);
   const isFromANumber = regex.test(from);
   if (!isLimitANumber) {
-    res.status(400).json({
+    return res.status(400).json({
       msg: `limit value "${limit}" is not a number`,
     });
   }
 
   if (!isFromANumber) {
-    res.status(400).json({
+    return res.status(400).json({
       msg: `from value "${from}" is not a number`,
     });
   }
 
-
- 
-
-  const [total,users] = await Promise.all([
+  const [total, users] = await Promise.all([
     User.countDocuments(query),
-    User.find(query).skip(Number(from)).limit(Number(limit))
-  ])
+    User.find(query).skip(Number(from)).limit(Number(limit)),
+  ]);
 
-  res.json({
+ return  res.json({
     total,
-    users
+    users,
   });
 };
 
@@ -55,18 +49,29 @@ const usersPost = async (req, res = response) => {
 
   await user.save();
 
-  res.json({
+ return res.json({
     msg: "post API ~ controller",
     user,
   });
 };
 
-const usersDelete = async(req = request, res = response) => {
-  const {id} = req.params
+const usersDelete = async (req = request, res = response) => {
+  const { id } = req.params;
   // const user = await User.findByIdAndDelete(id)
+ // const uid = req.uid;
 
-  const user = await User.findByIdAndUpdate(id,{status:false})
-  res.json(user);
+  const userAuth = req.user
+  const [user]= await Promise.all([
+    User.findByIdAndUpdate(id, { status: false }),
+   
+  ]);
+ 
+   return res.json({
+    user,
+    userAuth
+  });
+
+ 
 };
 
 const usersPut = async (req, res = response) => {
@@ -76,7 +81,7 @@ const usersPut = async (req, res = response) => {
     const salt = bcryptjs.genSaltSync();
     rest.password = bcryptjs.hashSync(password, salt);
     const user = await User.findByIdAndUpdate(id, rest);
-    res.json({
+   return res.json({
       msg: "put API ~ controller",
       user,
     });
