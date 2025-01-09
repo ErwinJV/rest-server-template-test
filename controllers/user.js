@@ -1,7 +1,7 @@
-const bcryptjs = require("bcryptjs");
-const { response, request } = require("express");
+const bcryptjs = require('bcryptjs');
+const { response, request } = require('express');
 
-const User = require("../models/user");
+const User = require('../models/user');
 
 const regex = /^[0-9]*$/;
 
@@ -10,6 +10,7 @@ const usersGet = async (req = request, res = response) => {
   const query = { status: true };
   const isLimitANumber = regex.test(limit);
   const isFromANumber = regex.test(from);
+
   if (!isLimitANumber) {
     return res.status(400).json({
       msg: `limit value "${limit}" is not a number`,
@@ -27,7 +28,7 @@ const usersGet = async (req = request, res = response) => {
     User.find(query).skip(Number(from)).limit(Number(limit)),
   ]);
 
- return  res.json({
+  return res.json({
     total,
     users,
   });
@@ -49,8 +50,8 @@ const usersPost = async (req, res = response) => {
 
   await user.save();
 
- return res.json({
-    msg: "post API ~ controller",
+  return res.json({
+    msg: 'post API ~ controller',
     user,
   });
 };
@@ -58,20 +59,15 @@ const usersPost = async (req, res = response) => {
 const usersDelete = async (req = request, res = response) => {
   const { id } = req.params;
   // const user = await User.findByIdAndDelete(id)
- // const uid = req.uid;
+  // const uid = req.uid;
 
-  const userAuth = req.user
-  const [user]= await Promise.all([
-    User.findByIdAndUpdate(id, { status: false }),
-   
-  ]);
- 
-   return res.json({
+  const userAuth = req.user;
+  const [user] = await Promise.all([User.findByIdAndUpdate(id, { status: false })]);
+
+  return res.json({
     user,
-    userAuth
+    userAuth,
   });
-
- 
 };
 
 const usersPut = async (req, res = response) => {
@@ -81,8 +77,8 @@ const usersPut = async (req, res = response) => {
     const salt = bcryptjs.genSaltSync();
     rest.password = bcryptjs.hashSync(password, salt);
     const user = await User.findByIdAndUpdate(id, rest);
-   return res.json({
-      msg: "put API ~ controller",
+    return res.json({
+      msg: 'put API ~ controller',
       user,
     });
   }
