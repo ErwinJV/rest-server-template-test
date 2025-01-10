@@ -25,6 +25,6 @@ router.post(
 
 router.put('/:id', [check('id', 'Is not a valid id').isMongoId()], productsPut);
 
-router.delete('/:id', [], deleteProducts);
+router.delete('/:id', [check('id', 'Is not a valid id').isMongoId()], deleteProducts);
 
 module.exports = router;

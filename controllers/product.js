@@ -4,6 +4,15 @@ const Product = require('../models/product');
 
 const regexNumber = /^[0-9]*$/;
 
+const isProduct = async (id) => {
+  const product = await Product.findById(id);
+  if (!product) {
+    return false;
+  }
+
+  return true;
+};
+
 const getProducts = async (req = request, res = response) => {
   const { limit = 5, from = 0 } = req.query;
   const isLimitANumber = regexNumber.test(limit);
@@ -50,6 +59,13 @@ const productsPost = async (req = request, res = response) => {
 
 const deleteProducts = async (req = request, res = response) => {
   const { id } = req.params;
+
+  const productExists = await isProduct();
+  if (!productExists) {
+    return res.status(404).json({
+      msg: 'Product not exists',
+    });
+  }
   await Product.findByIdAndDelete(id);
   return res.json({
     msg: 'Product deleted',
@@ -58,8 +74,13 @@ const deleteProducts = async (req = request, res = response) => {
 
 const productsPut = async (req = request, res = response) => {
   const { id } = req.params;
-
   const { _id, ...rest } = req.body;
+  const productExists = await isProduct();
+  if (!productExists) {
+    return res.status(404).json({
+      msg: 'Product not exists',
+    });
+  }
 
   const product = await Product.findByIdAndUpdate(id, rest);
 
