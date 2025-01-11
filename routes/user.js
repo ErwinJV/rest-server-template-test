@@ -8,7 +8,14 @@ const { haveRole, validateFields, validateJWT, validateRole } = require('../midd
 
 const router = Router();
 
-router.get('/', [validateJWT, validateRole], usersGet);
+router.get(
+  '/',
+  [
+    // validateJWT,
+    // validateRole
+  ],
+  usersGet,
+);
 
 router.put(
   '/:id',
@@ -26,8 +33,6 @@ router.put(
 router.post(
   '/',
   [
-    validateJWT,
-    validateRole,
     check('name', 'The name is required').not().isEmpty(),
     check('password', 'The passsword is required').not().isEmpty(),
     check('password', 'The password must be at least 6 characters').isLength(6),
